@@ -1,24 +1,27 @@
 #include "database.h"
 #include "compare_func.h"
 
-Student* database = NULL;
-int size = 0;
-int capacity = 0;
-int next_id = 1;
-char current_filename[MAX_FILENAME_LENGTH] = DEFAULT_FILENAME;
 
-void add_student() {
-    if (size >= capacity) {
-        capacity = (capacity == 0) ? 1 : capacity * 2;
-        database = realloc(database, capacity * sizeof(Student));
-        if (database == NULL) {
+void db_init(Database* db) {
+    db->students = malloc(INITIAL_CAPACITY * sizeof(Student));
+    db->size = 0;
+    db->capacity = INITIAL_CAPACITY;
+    db->next_id = 1;
+    strcpy(db->current_filename, DEFAULT_FILENAME);
+}
+
+void db_add_student(Database* db) {
+    if (db->size >= db->capacity) {
+        db->capacity = (db->capacity == 0) ? 1 : db->capacity * 2;
+        db->students = realloc(db->students, db->capacity * sizeof(Student));
+        if (db == NULL) {
             printf("Memory allocation error!\n");
             exit(1);
         }
     }
     
     Student new_student;
-    new_student.id = next_id++;
+    new_student.id = db->next_id++;
     
     printf("Enter student name: ");
     fgets(new_student.name, MAX_NAME_LENGTH, stdin);
@@ -31,12 +34,11 @@ void add_student() {
     scanf("%lf", &new_student.gpa);
     while(getchar() != '\n'); 
     
-    database[size++] = new_student;
+    db->students[db->size++] = new_student;
     printf("Student added successfully! Assigned ID: %d\n", new_student.id);
 }
-
-void delete_student() {
-    if (size == 0) {
+void delete_student(Database* db) {
+    if (db->size == 0) {
         printf("Database is empty.\n");
         return;
     }
@@ -47,13 +49,13 @@ void delete_student() {
     while(getchar() != '\n'); 
     
     bool found = false;
-    for (int i = 0; i < size; i++) {
-        if (database[i].id == id) {
+    for (int i = 0; i < db->size; i++) {
+        if (db->students[i].id == id) {
             found = true;
-            for (int j = i; j < size - 1; j++) {
-                database[j] = database[j + 1];
+            for (int j = i; j < db->size - 1; j++) {
+                db->students[j] = db->students[j + 1];
             }
-            size--;
+            db->size--;
             printf("Student with ID %d deleted.\n", id);
             break;
         }
@@ -64,8 +66,8 @@ void delete_student() {
     }
 }
 
-void search_student() {
-    if (size == 0) {
+void search_student(Database* db) {
+    if (db->size == 0) {
         printf("Database is empty.\n");
         return;
     }
@@ -85,13 +87,13 @@ void search_student() {
         while(getchar() != '\n');
         
         bool found = false;
-        for (int i = 0; i < size; i++) {
-            if (database[i].id == id) {
+        for (int i = 0; i < db->size; i++) {
+            if (db->students[i].id == id) {
                 printf("\nStudent found:\n");
-                printf("ID: %d\n", database[i].id);
-                printf("Name: %s\n", database[i].name);
-                printf("Age: %d\n", database[i].age);
-                printf("GPA: %.2f\n", database[i].gpa);
+                printf("ID: %d\n", db->students[i].id );
+                printf("Name: %s\n", db->students[i].name );
+                printf("Age: %d\n", db->students[i].age );
+                printf("GPA: %.2f\n", db->students[i].gpa);
                 found = true;
                 break;
             }
@@ -108,13 +110,13 @@ void search_student() {
         name[strcspn(name, "\n")] = '\0';
         
         bool found = false;
-        for (int i = 0; i < size; i++) {
-            if (strcasecmp(database[i].name, name) == 0) {
+        for (int i = 0; i < db->size; i++) {
+            if (strcasecmp(db->students[i].name, name) == 0) {
                 printf("\nStudent found:\n");
-                printf("ID: %d\n", database[i].id);
-                printf("Name: %s\n", database[i].name);
-                printf("Age: %d\n", database[i].age);
-                printf("GPA: %.2f\n", database[i].gpa);
+                printf("ID: %d\n", db->students[i].id );
+                printf("Name: %s\n", db->students[i].name );
+                printf("Age: %d\n", db->students[i].age );
+                printf("GPA: %.2f\n", db->students[i].gpa);
                 found = true;
                 // Don't break to find all matches
             }
@@ -129,8 +131,8 @@ void search_student() {
     }
 }
 
-void edit_student() {
-    if (size == 0) {
+void edit_student(Database* db) {
+    if (db->size == 0) {
         printf("Database is empty.\n");
         return;
     }
@@ -141,35 +143,35 @@ void edit_student() {
     while(getchar() != '\n'); // Clear input buffer
     
     bool found = false;
-    for (int i = 0; i < size; i++) {
-        if (database[i].id == id) {
+    for (int i = 0; i < db->size; i++) {
+        if (db->students[i].id == id) {
             printf("Current data:\n");
-            printf("ID: %d (cannot be changed)\n", database[i].id);
-            printf("Name: %s\n", database[i].name);
-            printf("Age: %d\n", database[i].age);
-            printf("GPA: %.2f\n", database[i].gpa);
+            printf("ID: %d\n", db->students[i].id );
+                printf("Name: %s\n", db->students[i].name );
+                printf("Age: %d\n", db->students[i].age );
+                printf("GPA: %.2f\n", db->students[i].gpa);
             
             printf("\nEnter new data:\n");
-            printf("New name (current: %s): ", database[i].name);
+            printf("New name (current: %s): ", db->students[i].name);
             char name[MAX_NAME_LENGTH];
             fgets(name, MAX_NAME_LENGTH, stdin);
             name[strcspn(name, "\n")] = '\0';
             if (strlen(name) > 0) {
-                strcpy(database[i].name, name);
+                strcpy(db->students[i].name, name);
             }
             
-            printf("New age (current: %d): ", database[i].age);
+            printf("New age (current: %d): ", db->students[i].age);
             char age_str[10];
             fgets(age_str, 10, stdin);
             if (strlen(age_str) > 0 && age_str[0] != '\n') {
-                database[i].age = atoi(age_str);
+                db->students[i].age = atoi(age_str);
             }
             
-            printf("New GPA (current: %.2f): ", database[i].gpa);
+            printf("New GPA (current: %.2f): ", db->students[i].gpa);
             char gpa_str[10];
             fgets(gpa_str, 10, stdin);
             if (strlen(gpa_str) > 0 && gpa_str[0] != '\n') {
-                database[i].gpa = atof(gpa_str);
+                db->students[i].gpa = atof(gpa_str);
             }
             
             printf("Data updated successfully.\n");
@@ -183,8 +185,8 @@ void edit_student() {
     }
 }
 
-void sort_database() {
-    if (size == 0) {
+void sort_database(Database* db) {
+    if (db->size == 0) {
         printf("Database is empty.\n");
         return;
     }
@@ -225,32 +227,32 @@ void sort_database() {
             return;
     }
     
-    merge_sort(database, 0, size - 1, compare);
+    merge_sort(db->students, 0, db->size - 1, compare);
     printf("Database sorted successfully.\n");
 }
 
 
 
-void save_to_file() {
-    FILE* file = fopen(current_filename, "w");
+void save_to_file(Database* db) {
+    FILE* file = fopen(db->current_filename, "w");
     if (file == NULL) {
         printf("Error opening file for writing!\n");
         return;
     }
     
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < db->size; i++) {
         fprintf(file, "%d,%s,%d,%.2f\n", 
-                database[i].id,
-                database[i].name, 
-                database[i].age, 
-                database[i].gpa);
+                db->students[i].id,
+                db->students[i].name, 
+                db->students[i].age, 
+                db->students[i].gpa);
     }
     
     fclose(file);
-    printf("Database saved to %s (%d records)\n", current_filename, size);
+    printf("Database saved to %s (%d records)\n", db->current_filename, db->size);
 }
 
-void save_as() {
+void save_as(Database* db) {
     char filename[MAX_FILENAME_LENGTH];
     printf("Enter filename to save as: ");
     fgets(filename, MAX_FILENAME_LENGTH, stdin);
@@ -262,30 +264,30 @@ void save_as() {
         return;
     }
     
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < db->size; i++) {
         fprintf(file, "%d,%s,%d,%.2f\n", 
-                database[i].id,
-                database[i].name, 
-                database[i].age, 
-                database[i].gpa);
+                db->students[i].id,
+                db->students[i].name, 
+                db->students[i].age, 
+                db->students[i].gpa);
     }
     
     fclose(file);
-    strcpy(current_filename, filename);
-    printf("Database saved to %s (%d records)\n", current_filename, size);
+    strcpy(db->current_filename, filename);
+    printf("Database saved to %s (%d records)\n", db->current_filename, db->size);
 }
 
 
 
-void load_from_file() {
-    FILE* file = fopen(current_filename, "r");
+void load_from_file(Database* db) {
+    FILE* file = fopen(db->current_filename, "r");
     if (file == NULL) {
         printf("File not found. Starting with empty database.\n");
         return;
     }
     
     // Clear current database if any
-    free_database();
+    free_database(db);
     
     char line[256];
     int max_id = 0;
@@ -321,15 +323,15 @@ void load_from_file() {
         student.gpa = atof(token);
         
         // Add to database
-        if (size >= capacity) {
-            capacity = (capacity == 0) ? 1 : capacity * 2;
-            database = realloc(database, capacity * sizeof(Student));
-            if (database == NULL) {
+        if (db->size >= db->capacity) {
+            db->capacity = (db->capacity == 0) ? 1 : db->capacity * 2;
+            db->students = realloc(db->students, db->capacity * sizeof(Student));
+            if (db == NULL) {
                 printf("Memory allocation error!\n");
                 exit(1);
             }
         }
-        database[size++] = student;
+        db->students[db->size++] = student;
         
         // Track max ID for next_id
         if (student.id >= max_id) {
@@ -338,20 +340,20 @@ void load_from_file() {
     }
     
     fclose(file);
-    next_id = max_id + 1;
-    printf("Database loaded from %s (%d records)\n", current_filename, size);
+    db->next_id = max_id + 1;
+    printf("Database loaded from %s (%d records)\n", db->current_filename, db->size);
 }
 
-void load_from_named_file(const char* filename) {
-    strncpy(current_filename, filename, MAX_FILENAME_LENGTH - 1);
-    current_filename[MAX_FILENAME_LENGTH - 1] = '\0';
-    load_from_file();
+void load_from_named_file(const char* filename, Database* db) {
+    strncpy(db->current_filename, filename, MAX_FILENAME_LENGTH - 1);
+    db->current_filename[MAX_FILENAME_LENGTH - 1] = '\0';
+    load_from_file(db);
 }
 
-void free_database() {
-    free(database);
-    database = NULL;
-    size = 0;
-    capacity = 0;
-    next_id = 1;
+void free_database(Database* db) {
+    free(db->students);
+    db->students = NULL;
+    db->size = 0;
+    db->capacity = 0;
+    db->next_id = 1;
 }

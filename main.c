@@ -6,37 +6,34 @@
 #define MAX_FILENAME_LENGTH 256
 #define DEFAULT_FILENAME "database.txt"
 
+int main() {
+    Database db;
+    db_init(&db);
 
-int main(int argc, char* argv[]) {
-    if (argc > 1) {
-        strncpy(current_filename, argv[1], MAX_FILENAME_LENGTH - 1);
-        current_filename[MAX_FILENAME_LENGTH - 1] = '\0';
-    }
-    
-    load_from_file();
+    load_from_file(&db);
     
     int choice;
     do {
-        print_menu();
+        print_menu(&db);
         printf("Enter your choice: ");
         scanf("%d", &choice);
         while(getchar() != '\n'); 
         
         switch(choice) {
-            case 1: add_student(); break;
-            case 2: delete_student(); break;
-            case 3: search_student(); break;
-            case 4: edit_student(); break;
-            case 5: sort_database(); break;
-            case 6: print_database(); break;
-            case 7: save_to_file(); break;
-            case 8: save_as(); break;
+            case 1: db_add_student(&db); break;
+            case 2: delete_student(&db); break;
+            case 3: search_student(&db); break;
+            case 4: edit_student(&db); break;
+            case 5: sort_database(&db); break;
+            case 6: print_database(&db); break;
+            case 7: save_to_file(&db); break;
+            case 8: save_as(&db); break;
             case 9: {
                 printf("Enter filename to load: ");
                 char filename[MAX_FILENAME_LENGTH];
                 fgets(filename, MAX_FILENAME_LENGTH, stdin);
                 filename[strcspn(filename, "\n")] = '\0';
-                load_from_named_file(filename);
+                load_from_named_file(filename, &db);
                 break;
             }
             case 10: printf("Exiting...\n"); break;
@@ -44,6 +41,6 @@ int main(int argc, char* argv[]) {
         }
     } while(choice != 10);
     
-    free_database();
+    free_database(&db);
     return 0;
 }
